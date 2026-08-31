@@ -153,6 +153,12 @@ export function AgentWorld() {
     reconfigure({ texSize: size });
   }, [reconfigure]);
 
+  // Boundary mode change (no need to rebuild textures; just flip the flag)
+  const onBoundary = useCallback((mode: 0 | 1) => {
+    setConfig(c => ({ ...c, boundary: mode }));
+    reconfigure({ boundary: mode });
+  }, [reconfigure]);
+
   // Reset (re-init)
   const onReset = useCallback((mode: 0 | 1 | 2) => {
     setConfig(c => ({ ...c, initMode: mode }));
@@ -225,11 +231,13 @@ export function AgentWorld() {
             params={params}
             paused={paused}
             texSize={config.texSize}
+            boundary={config.boundary}
             maxTexSize={maxTexSize}
             onParams={setParams}
             onTogglePause={() => setPaused(p => !p)}
             onReset={onReset}
             onTexSize={onTexSize}
+            onBoundary={onBoundary}
           />
         </div>
       )}

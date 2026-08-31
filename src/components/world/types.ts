@@ -52,14 +52,20 @@ export const DEFAULT_PARAMS: EngineParams = {
   bloom: 0.85,
   colorMode: 0,
   showGrid: false,
-  viewScale: 1.4,
+  // viewScale = 1.0 means the visible screen exactly matches the finite
+  // world bounds [-1, 1]. Agents bouncing off the world edge bounce off
+  // the visible frame — there is nothing "outside" to leak into.
+  viewScale: 1.0,
   viewShift: [0, 0],
 };
 
 export const DEFAULT_CONFIG: EngineConfig = {
   texSize: 1024,
   initMode: 1, // 0 = uniform cloud, 1 = centered blob, 2 = ring
-  boundary: 0,
+  // boundary = 1 means clamp + reflect: agents bounce off the edges of the
+  // finite world and can never leave. This is the "finite container" mode
+  // requested by the observer.
+  boundary: 1,
 };
 
 /**

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import {
   TEX_PRESETS,
+  type BoundaryMode,
   type ColorMode,
   type EngineParams,
   type InitMode,
@@ -31,22 +32,26 @@ interface Props {
   params: EngineParams;
   paused: boolean;
   texSize: number;
+  boundary: BoundaryMode;
   maxTexSize: number;
   onParams: (p: EngineParams) => void;
   onTogglePause: () => void;
   onReset: (mode: InitMode) => void;
   onTexSize: (size: number) => void;
+  onBoundary: (mode: BoundaryMode) => void;
 }
 
 export function ControlsPanel({
   params,
   paused,
   texSize,
+  boundary,
   maxTexSize,
   onParams,
   onTogglePause,
   onReset,
   onTexSize,
+  onBoundary,
 }: Props) {
   const set = <K extends keyof EngineParams>(k: K, v: EngineParams[K]) =>
     onParams({ ...params, [k]: v });
@@ -117,6 +122,43 @@ export function ControlsPanel({
                 <RotateCcw className="ml-1 h-2.5 w-2.5" />
               </Button>
             ))}
+          </div>
+
+          {/* Boundary mode: how the finite world frame treats agents that
+              reach the edge. */}
+          <div>
+            <Label className="text-[10px] text-white/40">Boundary</Label>
+            <div className="mt-1 flex gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onBoundary(0)}
+                className={`h-7 flex-1 border text-[10px] ${
+                  boundary === 0
+                    ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
+                    : "border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                Wrap
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onBoundary(1)}
+                className={`h-7 flex-1 border text-[10px] ${
+                  boundary === 1
+                    ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
+                    : "border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                Contain
+              </Button>
+            </div>
+            <p className="mt-1 text-[9px] leading-snug text-white/30">
+              {boundary === 0
+                ? "Toroidal: agents exiting one edge re-enter the opposite edge."
+                : "Reflective: agents bounce off the frame and stay inside forever."}
+            </p>
           </div>
         </Section>
 
