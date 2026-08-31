@@ -118,16 +118,35 @@ float snoise(vec2 v) {
 }
 
 // Curl of a time-evolving simplex potential -> divergence-free flow field.
-vec2 curlSimplex(vec2 p, float t) {
+vec2 curlSimplex(vec2 p, float t, float scale, float evolve) {
   float eps = 0.0015;
-  vec2 q = p * u_field.x + vec2(0.0, t * u_field.z);
+  vec2 q = p * scale + vec2(0.0, t * evolve);
   float n  = snoise(q);
   float nx = snoise(q + vec2(eps, 0.0));
   float ny = snoise(q + vec2(0.0, eps));
-  // gradient magnitude is roughly (n_eps - n) / eps. Multiply by 0.04 to
-  // bring it into a comfortable clip-space/sec range. Then user-controlled
-  // u_field.y lets us scale flow strength.
-  return vec2(nx - n, -(ny - n)) / eps * u_field.y * 0.03;
+  return vec2(nx - n, -(ny - n)) / eps;
+}
+
+// Multi-octave curl noise: superpose three curl fields at different spatial and
+// temporal scales. Each octave evolves on a different time base, so the field
+// never settles into a periodic pattern. This is the engine of chaos.
+vec2 curlChaos(vec2 p, float t) {
+  // Macro flow (large structures, slow evolution)
+  vec2 c1 = curlSimplex(p, t, u_field.x * 0.6, u_field.z * 0.4);
+  // Meso flow (medium structures, medium evolution)
+  vec2 c2 = curlSimplex(p + vec2(11.3, 7.7), t, u_field.x * 1.7, u_field.z * 1.1);
+  // Micro flow (small structures, fast evolution) -> breaks up coherent lanes
+  vec2 c3 = curlSimplex(p + vec2(43.1, 91.5), t, u_field.x * 4.3, u_field.z * 2.7);
+
+  // Animate the octave weights themselves so no octave dominates forever
+  float w1 = 0.6 + 0.4 * sin(t * 0.07);
+  float w2 = 0.5 + 0.5 * sin(t * 0.13 + 1.7);
+  float w3 = 0.4 + 0.6 * sin(t * 0.19 + 3.3);
+
+  vec2 curl = c1 * w1 + c2 * w2 + c3 * w3;
+  // Apply flow strength (user-controlled) and a global gain. The 0.03 factor
+  // brings the gradient magnitude into a comfortable clip-space/sec range.
+  return curl * u_field.y * 0.03;
 }
 
 void main() {
@@ -142,8 +161,8 @@ void main() {
   int species = int(seed * 4.0);
   float speciesGain = u_species[species];
 
-  // Drive force: curl of a time-evolving potential.
-  vec2 flow = curlSimplex(pos, u_time);
+  // Drive force: multi-octave chaotic curl noise.
+  vec2 flow = curlChaos(pos, u_time);
 
   // Each species drifts along a different axis of the flow -> segregation
   vec2 speciesBias = vec2(
@@ -151,18 +170,40 @@ void main() {
     (species == 2 ? 1.0 : species == 3 ? -0.6 : 0.0)
   ) * speciesGain;
 
-  // Steering: relax velocity toward flow + bias
-  vec2 target = flow + speciesBias;
-  vel = mix(vel, target, clamp(u_dt * 1.6, 0.0, 1.0));
+  // Macro swirl that rotates with position and time -> large vortex
+  // structures that drift across the world.
+  float swirlAngle = u_field.w * (length(pos) * 2.0 + sin(u_time * 0.09) * 1.5);
+  float cs = cos(swirlAngle), sn = sin(swirlAngle);
+  vec2 swirl = vec2(-pos.y, pos.x) * u_field.w * 0.3;
 
-  // Thermal jitter (deterministic per-agent hash so it isn't pure randomness)
-  float j1 = hash21(vec2(tc) * 1.7 + u_time * 0.13) - 0.5;
-  float j2 = hash21(vec2(tc) * 2.3 + u_time * 0.17 + 7.1) - 0.5;
-  vel += vec2(j1, j2) * u_jitter;
+  // Steering: relax velocity toward flow + bias + swirl
+  vec2 target = flow + speciesBias + swirl;
+  // Stronger relaxation -> faster response to the chaotic field
+  vel = mix(vel, target, clamp(u_dt * 3.2, 0.0, 1.0));
 
-  // Clamp speed so agents don't blow up
+  // Thermal jitter — high-frequency stochastic kicks. We use two independent
+  // hash streams per agent and let time advance them so the kicks are
+  // uncorrelated between consecutive frames.
+  float j1 = hash21(vec2(tc) * 1.7 + u_time * 0.43) - 0.5;
+  float j2 = hash21(vec2(tc) * 2.3 + u_time * 0.51 + 7.1) - 0.5;
+  float j3 = hash21(vec2(tc) * 3.9 + u_time * 0.61 + 13.7) - 0.5;
+  float j4 = hash21(vec2(tc) * 5.1 + u_time * 0.73 + 19.3) - 0.5;
+  vel += vec2(j1 + j3 * 0.5, j2 + j4 * 0.5) * u_jitter;
+
+  // Periodic global "shocks" — every few seconds, a random direction pulse
+  // hits every agent with a phase that depends on its texel coord. This
+  // creates waves of activity sweeping across the world.
+  float shockPhase = sin(u_time * 0.27);
+  float shockSeed  = hash21(vec2(tc) * 0.5 + floor(u_time * 0.27));
+  if (shockSeed > 0.97) {
+    float ang = shockSeed * 6.2831853;
+    vel += vec2(cos(ang), sin(ang)) * abs(shockPhase) * 0.4;
+  }
+
+  // Speed limit so agents don't blow up. Higher than before so chaos can
+  // express itself as visible motion.
   float sp = length(vel);
-  float maxSp = 0.6;
+  float maxSp = 1.2;
   if (sp > maxSp) vel *= maxSp / sp;
 
   // Integrate position

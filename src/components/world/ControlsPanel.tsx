@@ -168,7 +168,7 @@ export function ControlsPanel({
             label="Time scale"
             value={params.timeScale}
             min={0}
-            max={4}
+            max={6}
             step={0.05}
             onValue={(v) => set("timeScale", v)}
             fmt={(v) => v.toFixed(2) + "x"}
@@ -177,7 +177,7 @@ export function ControlsPanel({
             label="Noise scale"
             value={params.field[0]}
             min={0.5}
-            max={8}
+            max={12}
             step={0.1}
             onValue={(v) => set("field", [v, params.field[1], params.field[2], params.field[3]])}
             fmt={(v) => v.toFixed(1)}
@@ -186,7 +186,7 @@ export function ControlsPanel({
             label="Flow strength"
             value={params.field[1]}
             min={0}
-            max={3}
+            max={6}
             step={0.05}
             onValue={(v) => set("field", [params.field[0], v, params.field[2], params.field[3]])}
             fmt={(v) => v.toFixed(2)}
@@ -195,7 +195,7 @@ export function ControlsPanel({
             label="Evolve rate"
             value={params.field[2]}
             min={0}
-            max={1}
+            max={2}
             step={0.01}
             onValue={(v) => set("field", [params.field[0], params.field[1], v, params.field[3]])}
             fmt={(v) => v.toFixed(2)}
@@ -204,7 +204,7 @@ export function ControlsPanel({
             label="Swirl"
             value={params.field[3]}
             min={0}
-            max={2}
+            max={4}
             step={0.05}
             onValue={(v) => set("field", [params.field[0], params.field[1], params.field[2], v])}
             fmt={(v) => v.toFixed(2)}
@@ -213,7 +213,7 @@ export function ControlsPanel({
             label="Thermal jitter"
             value={params.jitter}
             min={0}
-            max={0.05}
+            max={0.15}
             step={0.001}
             onValue={(v) => set("jitter", v)}
             fmt={(v) => (v * 1000).toFixed(1) + "m"}

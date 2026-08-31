@@ -42,19 +42,17 @@ export interface EngineStats {
 
 export const DEFAULT_PARAMS: EngineParams = {
   dt: 0.016,
-  timeScale: 1.2,
-  field: [3.0, 1.4, 0.18, 0.4],
-  species: [0.28, 0.22, 0.24, 0.18],
-  jitter: 0.003,
+  timeScale: 1.8,                 // faster wall-clock -> more violent churn
+  field: [4.5, 2.4, 0.55, 0.9],   // bigger noise scale, stronger flow, faster
+                                  // evolution, much stronger macro swirl
+  species: [0.45, 0.40, 0.42, 0.36], // strong per-species segregation
+  jitter: 0.018,                  // ~6x previous — visible thermal kicks
   pointSize: 1.6,
   intensity: 1.1,
   exposure: 1.8,
   bloom: 0.85,
   colorMode: 0,
   showGrid: false,
-  // viewScale = 1.0 means the visible screen exactly matches the finite
-  // world bounds [-1, 1]. Agents bouncing off the world edge bounce off
-  // the visible frame — there is nothing "outside" to leak into.
   viewScale: 1.0,
   viewShift: [0, 0],
 };
