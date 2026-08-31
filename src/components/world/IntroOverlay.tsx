@@ -1,25 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+
+// ---------------------------------------------------------------------------
+// SSR-safe localStorage probe.
+//
+// `useSyncExternalStore` is the React team's official escape hatch for reading
+// browser-only state without triggering hydration mismatches. React always
+// uses the server snapshot (false) during hydration, then reconciles to the
+// client snapshot in a follow-up render — no hydration error.
+// ---------------------------------------------------------------------------
+function subscribe(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+function getClientSnapshot(): boolean {
+  // After hydration, return whether the intro has been dismissed before.
+  return typeof window !== "undefined" && !!localStorage.getItem("1m-intro-seen");
+}
+
+function getServerSnapshot(): boolean {
+  // During SSR and initial hydration: never consider it "seen",
+  // so the rendered tree is identical on server and client.
+  return false;
+}
 
 export function IntroOverlay({ onClose }: { onClose: () => void }) {
-  const [show, setShow] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return !localStorage.getItem("1m-intro-seen");
-  });
+  // seen === true  -> previously dismissed -> render nothing
+  // seen === false -> first visit -> render the overlay
+  // Critically: this returns the SAME value during SSR and the initial client
+  // render (false / not seen), so React's `useId` ordering is stable and
+  // downstream Radix `aria-controls` IDs stay aligned.
+  const seen = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
+  const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    // No-op: state initialized from localStorage in useState initializer above.
-    // This effect exists so future side-effects (e.g. analytics) can attach here.
-  }, []);
-
-  if (!show) return null;
+  const visible = !seen && !dismissed;
+  if (!visible) return null;
 
   const close = () => {
-    localStorage.setItem("1m-intro-seen", "1");
-    setShow(false);
+    try {
+      localStorage.setItem("1m-intro-seen", "1");
+    } catch {
+      // localStorage may be unavailable (private mode, etc.) — that's fine.
+    }
+    setDismissed(true);
     onClose();
   };
 
@@ -59,8 +87,4 @@ export function IntroOverlay({ onClose }: { onClose: () => void }) {
       </div>
     </div>
   );
-}
-
-export function IntroCloseButton() {
-  return <X className="h-3 w-3" />;
 }
