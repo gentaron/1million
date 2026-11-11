@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/gentaron/infocollect/HEAD/ecosystem/schema.json",
+  "schema": 1,
+  "name": "1million",
+  "group": "play",
+  "groupLabel": "遊びと実験",
+  "status": "maintained",
+  "role": "1億の観測者 — 1億体のエージェントが創発する世界を観測する WebGL2",
+  "stack": "Next.js · WebGL2",
+  "produces": [
+    "game"
+  ],
+  "consumes": [],
+  "upstream": [],
+  "downstream": [],
+  "siblings": [
+    "fpsgame",
+    "hennanotes",
+    "minagal",
+    "game-of-mina",
+    "OCAI"
+  ],
+  "hub": {
+    "repo": "https://github.com/gentaron/infocollect",
+    "map": "https://github.com/gentaron/infocollect/blob/HEAD/ecosystem/README.md",
+    "kb": "https://raw.githubusercontent.com/gentaron/infocollect/HEAD/docs/kb",
+    "mcp": [
+      "infocollect-kb",
+      "forge"
+    ]
+  }
+}

@@ -39,3 +39,15 @@ bun run dev    # http://localhost:3000
 ## ライセンス
 
 MIT
+
+<!-- ecosystem:begin (自動生成: gentaron/infocollect の ecosystem/registry.json から。手で直さない) -->
+
+## つながり
+
+gentaron のリポジトリ群のうち **遊びと実験** の一つ。1億の観測者 — 1億体のエージェントが創発する世界を観測する WebGL2。
+
+- **同じ島**: [fpsgame](https://github.com/gentaron/fpsgame)、[hennanotes](https://github.com/gentaron/hennanotes)、[minagal](https://github.com/gentaron/minagal)、[game-of-mina](https://github.com/gentaron/game-of-mina)、[OCAI](https://github.com/gentaron/OCAI)
+
+全体の地図 → [ecosystem](https://github.com/gentaron/infocollect/blob/HEAD/ecosystem/README.md)
+
+<!-- ecosystem:end -->
